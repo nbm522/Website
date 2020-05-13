@@ -7,7 +7,12 @@ cd ~/Desktop/Website
 
 git init 
 git add . 
-git commit -m 
+git commit -m "test" 
 git remote add origin https://github.com/nbm522/Website.git 
 git push origin master
 
+git add .
+
+git commit -m "test"
+
+git push origin master
