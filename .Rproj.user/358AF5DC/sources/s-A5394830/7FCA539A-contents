@@ -13,6 +13,6 @@ git push origin master
 
 git add .
 
-git commit -m "test"
+git commit -m "another"
 
 git push origin master

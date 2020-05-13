@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589398965205.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2251270022",
+    "id" : "AA11DDC0",
+    "lastKnownWriteTime" : 1589399692,
+    "last_content_update" : 1589399692784,
+    "path" : "~/Desktop/Website/content/blog/2020-05-13-neha.Rmd",
+    "project_path" : "content/blog/2020-05-13-neha.Rmd",
+    "properties" : {
+        "cursorPosition" : "9,14",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
