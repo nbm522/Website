@@ -1,0 +1,124 @@
+---
+title: "Project 1"
+output:
+  pdf_document: default
+  html_document: default
+---
+Neha Momin nbm522
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F, tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+## Introduction 
+   The first dataset is bad_drivers and it contains information on the number of drivers involved in a fatal collision per billion miles, the percent of drivers involved in a collision while speeding, percent of drivers in a collision that were alcohol impaired, the percent of drivers that were not distracted during the collision, the percent of drivers in a collision with no previous accidents, the average insurance premiums by state, and the losses incurred by the insurance companies for collisions per insured driver. I obtained this dataset through the "fivethirtyeight" package. This dataset was interesting to me because I wanted to see the how insurance premiums differ by certain accidents (if it was due to speeding, impaired driving, etc.). 
+    The next dataset is camera and it contains information on presence of red light cameras and speeding cameras (if they are not found, limited to certain areas, or always found in differerent states), the total number of active duty officers and registered drivers in each state, and the winning party of the state in the last election. I created this dataset by compiling data from websites of the Bureau of Transportation, Bureau of Justice, and NPR. This dataset was interesting to me because I wanted to see if there was a difference in the number of officers based on traffic camera laws in each state. I also wanted to know if there was any relation between having traffic camera laws and the majority party of the state.
+    I expect that the number of drivers involved in collisions will be higher in states where there are no speeding cameras or red light cameras. There will also be higher speeding related collisions where there are limited speeding cameras or no speeding cameras. I also beleive that largely republican states will not have the presence of speeding or red light cameras but democratic states might have them. I expect that insurance premiums are probably higher in states where there is a higher number of drivers involved in collisions. 
+
+## Joining/Merging/Tidying
+
+```{r cars}
+library(tidyverse)
+library(fivethirtyeight)
+library(GGally)
+library(formatR)
+
+camera<-read.csv("camera.csv")
+bad_drivers<-bad_drivers
+
+traffic<- full_join(bad_drivers,camera, by="state")
+glimpse(traffic)
+merge<- traffic %>% select("state","redcamera","speedcamera","num_drivers","perc_speeding","officers")
+mergelong<- merge %>% pivot_longer(c("redcamera","speedcamera"), names_to = "type", values_to = "presence")
+glimpse(mergelong)
+mergewide<- mergelong %>% pivot_wider(names_from = "type", values_from = "presence")
+glimpse(mergewide)
+```
+   
+  A full join was done for this because the one common factor between the two datasets was the "state" variable and there were no other repeats in variables. There were no observations that were dropped as a result of the join because the "state" variable had exact matches in each dataset. I selected a certain subset of data (merge) to untidy since my datasets were already tidy. I used pivot_longer to put the "type" of camera in a new column as well as the presence of it in the state (mergelong). This doubled the number of observations because there are two types of cameras (red light and speed) in the traffic dataset. That untidied the data so to revert it back to the tidy format I used pivot_wider to make one observation for each state (mergewide). This resulted in each type of camera getting its own column and the presence of it explained within those columns. 
+
+## Wrangling- dplyr Functions
+
+```{r}
+traffic1<- traffic %>% filter(speedcamera=="no") %>% select(state,perc_speeding,party) %>% arrange(desc(perc_speeding))
+glimpse(traffic1)
+
+traffic<- traffic %>% mutate(driver_officer=drivers/officers)
+glimpse(traffic)
+
+traffic2<- traffic %>% group_by(redcamera,party) %>% summarize(mean(num_drivers, na.rm=T))
+head(traffic2)
+```
+   For the dplyr functions, the data was first filtered the data by states with no speeding cameras and selected the state, percent speeding, and political party column. Then it was arranged in descending order by percent speeding due to speeding. This showed a table where Hawaii (democratic state) had the highest percent of collisions where the driver was speeding. For the next chain, the data was mutated to create a ratio of registered drivers to officers. On average for every one officer there are 340.484 officers. For the last chain, the data was grouped by the presence of red light cameras and political party, then summarize was used to find the mean number of drivers involved in accidents for each category. The data showed that drivers from republican states were involved in more collisions and that states with limited cameras see the most number of drivers in collisions. 
+
+## Wrangling- Summary Statistics
+
+```{r}
+traffic3 <-traffic %>% group_by(speedcamera) %>% summarize(mean_premium=mean(insurance_premiums,na.rm=T), sd_speeding=sd(perc_speeding, na.rm=T),n=n(),se_speeding = sd_speeding/sqrt(n))
+head(traffic3)
+
+traffic4 <-traffic %>% group_by(party,redcamera) %>% summarize(median_officers=median(officers,na.rm=T))
+head(traffic4)
+
+traffic5<- traffic %>% summarize(mean(num_drivers, na.rm=T),n_distinct(speedcamera))
+head(traffic5)
+
+max(traffic$perc_speeding)
+min(traffic$officers)
+r<- range(traffic$num_drivers)
+  diff(r)
+  
+traffic6<-traffic %>% na.omit %>% select_if(is.numeric)
+  cor(traffic6)
+  
+traffic7<- traffic %>% group_by(party,speedcamera) %>% summarise_at(vars(num_drivers,perc_speeding,officers),list(mean=mean, median=median, sd=sd), na.rm = TRUE)
+head(traffic7)
+```
+  The summary statistics in the first chain grouped data by the presence of speed cameras and showed that the highest insurance premiums can be seen in states that have the presence of speed cameras. This could be because the drivers should be aware of thier speed if the cameras are present, therefore if they do get into a collision they are more liable. The standard of error for the percent of collisions from speeding is highest in states with no speeding cameras and this large variation could be due to different penalties for speeding tickets. It can also be seen that states with no speeding cameras are far more common that states with a presence. The standard of error for speeding collisions is lowest in states with no speeding cameras and is about similar in states with cameras. In the next chain, the data is grouped by political party and presence of red light cameras and shows the median number of officers is highest in republican states with limited presence of red light cameras. The third chain shows the mean number of drivers involved in a collision is 15.79 and that there are 3 distinct groups for the presence of speeding cameras (yes, no, limit). The maximum value for the percent of collisions due to speeding is 54%. The minimum value for active duty officers is 1147 which is in Vermont. This could be due to the fact that Vermont is a smaller state with a smaller population. The range value for the number of drivers in a collision is 18. 
+  A correlation test for numeric variables shows the highest correlation between the number of active duty officers and registered drivers. The last chain grouped the data by the presence of a speed camera and party and summarized the mean, median, and standard of deviation for the number of drivers, percent of collisions due to speeding, and officers. The lowest mean number of drivers in collisions can be seen in democratic states with speeding cameras and the lowest median of collisions due to speeding can be seen in republican states with speeding cameras. These results support the idea that speeding cameras make drivers more aware of their driving habits to reduce thier speed. The mean and median number of officers is highest in states with limited presence of speed cameras such as in school zones, or construction areas where police are usually stationed to monitor drivers. The median for percent of collisions from speeding and number of drivers involved in a collisions is highest in republican states. The standard of deviation for percent of collisions due to speeding is highest in states with no speeding cameras which can be due too the fact that people are less likley to monitor thier speed if they know they are not being monitored by law enforcement. The standard of deviation for number of drivers involved in a collision is lowest in republican states with speed cameras. Last, the standard of deviation for active officers varies greatly and this could be due to the size and population of the state varying as well. 
+ 
+## Visualizing
+
+```{r}
+traffic%>%select_if(is.numeric) %>% cor %>% as.data.frame %>% rownames_to_column %>% pivot_longer(-1) %>% ggplot(aes(rowname,name,fill=value))+geom_tile()+ theme(axis.text.x = element_text(angle = 60, hjust = 1))+ geom_text(aes(label=round(value,2)))+
+xlab("")+ylab("")+ scale_fill_gradient2(low="red",high="blue")
+
+ggplot(data=traffic, aes(x=speedcamera, fill=party))+geom_bar(aes(y=perc_speeding), stat="summary", fun.y="mean", position="dodge")+scale_y_continuous(name="Percent Drivers Speeding", breaks=seq(0,50,by=5))+ ggtitle("Speeding Accident Data") +
+xlab("Speeding Camera")+ theme(axis.text = element_text(colour = "darkblue")) + scale_fill_brewer(palette = "Pastel1") 
+
+ggplot(traffic, aes(redcamera, officers,fill=party))+ geom_boxplot()+ scale_y_continuous(name="Number of Officers", breaks=seq(0,80000,by=10000)) + labs(title= "Active Officer Data", x="Red Light Camera")+ facet_wrap(~party) + theme(panel.border = element_rect(linetype = "dashed", fill = NA)) + scale_fill_brewer(palette = "Set1")
+
+```
+**Correlation Heatmap**
+    The heatmap shows the highest correlation between between the number of registered drivers in a state and the number of active duty officers in the state. This seems to make sense because states with more people generally will have a higher number of officers to efficiently respond to situations. States with high populations such as New York and California will typically have more precints and more officers compared to low population states such as Vermont. Another high correlation that can be seen in between insurance premium cost and the losses incurred by insurance companies. This makes sense because an accident will cause a driver's insurance premium to go up, therefore, the more losses a company has, the more they raise thier prices. A generally moderate correlation can be seen between the number of officers in a state and the losses incurred by insurance companies. This could be because a higher number of losses means that state sees more accidents, therefore, they need a larger number of officers to be able to efficiently respond to accidents.  
+  
+**Barplot**
+    This chart shows the relationship between the presence of speeding cameras in a state and the percent of collisions in the state due to speeding and is separated by that state's political party. It can be seen that there was not a significant difference in the number of collisions due to speeding based on the presence of speeding cameras. Based on political party, there were less collisions seen for the democratic party but these differences were not significant. The lack of significant differences could be due to the fact that in collisions where speeding was the main factor, the regard for speeding cameras is not on the drivers mind. Therefore, as speeding is a leading cause of traffic collisions, it is similar across states. If the data explained the number of tickets given due to speeding, perhaps there would be a difference based on the presence of speeding cameras. States with speeding cameras everywhere, or in limited areas would probably have a lower number of tickets compared to the states with no speeding cameras present. 
+  
+**Boxplot**
+    This plot shows the relationship between the presence of red light cameras in a state and the number of active duty officers in the state and is separated by political party. In democratic states, it can be seen that the distribution of officers in states with red light cameras or no red light cameras is about equally lower with two outliers. The states with limited red light cameras could have more police officers because in limited areas such as school zones or construction sites, states will typically post officers to monitor the areas. The outliers could be a result of larger states with a larger population. The plots with and limited red light cameras are negatively skewed while the states with no cameras have a pretty normal distribution. In the boxplots for republican states, there is a negative skew for states with and without red light cameras and a positive skew for states with limited red light cameras. Once again, the outliers occur in states with and without red light cameras which could be due to the population of that particular state being larger. The distributions of officers in the republican data are about equal to each other. This could be because republicans favor policies that give tax breaks meaning less funding to areas such as police programs. 
+
+
+## Dimensionality Reduction
+
+```{r}
+library(cluster)
+pam_dat<-traffic %>% select(-state)
+sil_width<-vector()
+for(i in 2:10){
+  pam_fit <- pam(pam_dat, k = i)
+  sil_width[i] <- pam_fit$silinfo$avg.width
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+pam1<-traffic %>% select(-1) %>% pam(3)
+pam1 
+pamclust<-traffic %>% mutate(cluster=as.factor(pam1$clustering))
+pamclust %>% ggplot(aes(log(officers),log(drivers),color=cluster))+geom_point()
+pamclust %>% group_by(cluster) %>% summarize_if(is.numeric,mean,na.rm=T)
+traffic[pam1$id.med,]
+library(GGally)
+ggpairs(pamclust,columns= c(2,3,7,8,11,13), aes(color=cluster))
+```
+    The optimal number of clusters used was 3 based on the analysis of silhouette width. From the cluster analysis, the mean number of drivers involved in collisions for all three clusters was between 15-16. The mean percent of drivers involved in collisions due to speeding for the three clusters was around 32%. The visual showed that there was a strong relationship between the number of active duty officers and the number of registered drivers in a state. The most representative states for the clusters were Tennessee, Idaho, and Texas. In looking at pairwise combinations, the strongest correlations can be seen between losses and insurance premiums and number of registered drivers and officers. They show significant separation in their plots, have distinct clusters and show a strong correlation.
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

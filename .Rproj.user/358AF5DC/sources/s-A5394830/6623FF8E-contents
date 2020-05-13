@@ -1,0 +1,493 @@
+---
+title: "WS19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+- Updated function: Use this one!
+
+```{R}
+## GIVE IT PREDICTED PROBS AND TRUTH LABELS, RETURNS VARIOUS DIAGNOSTICS
+
+class_diag<-function(probs,truth){
+  
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  prediction<-ifelse(probs>.5,1,0)
+  acc=mean(truth==prediction)
+  sens=mean(prediction[truth==1]==1)
+  spec=mean(prediction[truth==0]==0)
+  ppv=mean(truth[prediction==1]==1)
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+```
+
+
+
+```{R}
+library(tidyverse)
+library(lmtest)
+
+meddat<-read.csv("http://www.nathanielwoodward.com/MedicalData.csv")
+meddat<-meddat%>%mutate(Diabetic=ifelse(Diabetic=="Yes",1,0))
+
+#drop subject
+meddat<-meddat%>%select(-Subject)
+meddat
+```
+
+```{R}
+fit<-glm(Diabetic~(.)^2, data=meddat, family="binomial")
+
+prob<-predict(fit,type="response")
+class_diag(prob,meddat$Diabetic)
+```
+
+
+```{R}
+if(as.numeric(version$minor)>6.0){RNGkind(sample.kind = "Rounding")} #run this to make numbers match slides
+set.seed(1234)
+
+first_half<-meddat%>%sample_frac(.5) #random half of the dataset for training
+second_half<-anti_join(meddat,first_half) #save the other half to test
+
+## Fit the model to the first_half of the data (the training set)
+
+fit<-glm(Diabetic~(.)^2, data=first_half, family="binomial")
+
+##  Get that model's predictions on the second_half (the testing set)
+probs1<-predict(fit, newdata=second_half, type="response")
+```
+
+
+
+```{R}
+truth1<-second_half$Diabetic #truth labels from testing set
+table(prediction=as.numeric(probs1>.5), truth1) #confusion matrix
+class_diag(probs1,truth1) # how well did we do?
+```
+
+Does a much worse job at predicting new data!
+
+
+```{R}
+## Flip it around and use model trained on the second half to predict the first half
+
+fit<-glm(Diabetic~(.)^2, data=second_half, family="binomial")
+
+probs2<-predict(fit, newdata=first_half, type="response")
+
+truth2<-first_half$Diabetic #truth labels from testing set
+table(prediction=as.numeric(probs2>.5), truth2) #confusion matrix
+class_diag(probs2,truth2)
+```
+
+
+```{R}
+## Average classification performance
+two_tests<-bind_rows(class_diag(probs1,truth1), class_diag(probs2,truth2))
+two_tests
+
+summarize_all(two_tests,mean)
+```
+
+
+## k-Fold CV
+
+```{R}
+set.seed(1234)
+k=10
+
+data <- meddat %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$Diabetic #save truth labels from fold i
+  
+  fit <- glm(Diabetic~(.)^2, data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)
+```
+
+
+
+
+
+```{R}
+#Simpler model
+fit<-glm(Diabetic~Age+Gender+Edema+Cholesterol+Glucose+BP+BMI+Platelet,
+         data=meddat,family="binomial")
+
+summary(fit)
+
+prob<-predict(fit,type="response")
+class_diag(prob,meddat$Diabetic)
+#worse in-sample performance than more complex model (but that doesn't matter)!
+```
+
+
+```{R}
+## Cross-Validation performance of simpler model
+
+data <- meddat %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$Diabetic #save truth labels from fold i
+  
+  fit <- glm(Diabetic~Age+Gender+Edema+Cholesterol+Glucose+BP+BMI+Platelet, 
+             data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)
+
+```
+
+
+```{R}
+#Lasso on medical data
+library(glmnet)
+y<-as.matrix(meddat$Diabetic) #grab response
+x<-model.matrix(Diabetic~.,data=meddat)[,-1] #grab predictors
+head(x)
+
+
+cv <- cv.glmnet(x,y) #picks an optimal value for lambda through 10-fold CV
+
+{plot(cv$glmnet.fit, "lambda", label=TRUE); abline(v = log(cv$lambda.1se)); abline(v = log(cv$lambda.min),lty=2)}
+
+
+
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso)
+```
+
+
+```{R}
+#cross-validating lasso model
+set.seed(1234)
+k=10
+
+data <- meddat %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$Diabetic #save truth labels from fold i
+  
+  fit <- glm(Diabetic~Glucose+BMI, 
+             data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+diags%>%summarize_all(mean)
+```
+
+
+```{R}
+fit<-lm(mpg~.,data=mtcars)
+yhat<-predict(fit) #predicted mpg
+``` 
+
+
+```{R}
+mean((mtcars$mpg-yhat)^2) #mean squared error (MSE)
+``` 
+
+
+
+```{R}
+set.seed(1234)
+k=5 #choose number of folds
+
+data1<-mtcars[sample(nrow(mtcars)),] #randomly order rows
+folds<-cut(seq(1:nrow(mtcars)),breaks=k,labels=F) #create folds
+
+diags<-NULL
+for(i in 1:k){
+  train<-data1[folds!=i,]
+  test<-data1[folds==i,]
+  
+  fit<-lm(mpg~.,data=train)
+  yhat<-predict(fit,newdata=test)
+  
+  diags<-mean((test$mpg-yhat)^2) 
+}
+
+mean(diags)
+
+## much higher error
+``` 
+
+
+
+```{R}
+## lasso with linear regression (and numeric predictors)
+library(glmnet)
+data(mtcars)
+y<-as.matrix(mtcars$mpg)
+x<-mtcars%>%dplyr::select(-mpg)%>%mutate_all(scale)%>%as.matrix
+
+cv<-cv.glmnet(x,y) #this picks an optimal value for lambda (smallest MSE) via 10-fold CV
+``` 
+
+
+```{R}
+{plot(cv$glmnet.fit, "lambda", label=TRUE)
+abline(v = log(cv$lambda.1se))
+abline(v = log(cv$lambda.min),lty=2)}
+
+
+``` 
+
+
+```{R}
+lasso1<-glmnet(x,y,lambda=cv$lambda.1se)
+coef(lasso1)
+``` 
+
+
+```{R}
+set.seed(1234)
+k=5 #5 folds since dataset is very small
+
+data1<-mtcars[sample(nrow(mtcars)),] #randomly order rows
+folds<-cut(seq(1:nrow(mtcars)),breaks=k,labels=F) #create folds
+
+diags<-NULL
+for(i in 1:k){
+  train<-data1[folds!=i,]
+  test<-data1[folds==i,]
+  
+  fit<-lm(mpg~cyl+hp+wt,data=train)
+  yhat<-predict(fit,newdata=test)
+  
+  diags<-mean((test$mpg-yhat)^2) 
+}
+
+mean(diags)
+``` 
+
+
+```{R}
+gradsch<- read.csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+gradsch$rank <- factor(gradsch$rank) #make rank (tier 1, tier 2, etc.) a factor
+
+
+```
+
+
+```{R}
+set.seed(1234)
+#code categorical predictors as 0/1
+model.matrix(admit ~ -1., data=gradsch)
+x<-scale(x)
+y<-as.matrix(gradsch$admit)
+
+cv2<-cv.glmnet(x,y, family="binomial")
+lasso2<-glmnet(x,y,family="binomial",lambda=cv2$lambda.1se)
+coef(lasso2)
+
+
+```
+
+
+```{R}
+set.seed(1234)
+k=10 #choose number of folds
+
+#select only rank1 indicator
+gradsch$rank1<-ifelse(gradsch$rank=="1",1,0)
+data1<-gradsch[sample(nrow(gradsch)),] #randomly order rows
+folds<-cut(seq(1:nrow(gradsch)),breaks=k,labels=F) #create folds
+
+diags<-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train<-data1[folds!=i,] 
+  test<-data1[folds==i,]
+  truth<-test$admit
+  
+  ## Train model on training set
+  fit<-glm(admit~gre+gpa+rank1,data=train,family="binomial")
+  probs<-predict(fit,newdata = test,type="response")
+  
+  ## Test model on test set (save all k results)
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+diags%>%summarize_all(mean)
+
+
+``` 
+
+
+```{R}
+prussian<-read.table("http://www.randomservices.org/random/data/HorseKicks.txt",header = T)
+
+prussian<-gather(prussian,Corps,Kicks,-Year)
+prussian$Corps<-as.factor(prussian$Corps)
+prussian%>%head()
+
+prussian%>%ggplot()+geom_histogram(aes(y=..density..,Kicks),bins=5)
+
+
+``` 
+
+
+```{R}
+mean(prussian$Kicks)
+dpois(0:4,lambda=.7)
+
+
+``` 
+
+
+```{R}
+prussian%>%ggplot()+geom_histogram(aes(y=..density..,Kicks),bins=5)+
+  annotate(geom="point",x=0:4,y=dpois(0:4,lambda=.7),size=3,color="red")
+
+
+``` 
+
+
+```{R}
+prussian$Year_0<-prussian$Year-1875
+
+fit<-glm(Kicks~Year_0,data=prussian,family="poisson") 
+coeftest(fit)
+
+
+
+
+``` 
+
+
+```{R}
+prussian$Year_0<-prussian$Year-1875
+
+fit<-glm(Kicks~Year_0,data=prussian,family="poisson") 
+coeftest(fit)
+
+```
+
+```{R}
+drinkdat<-read.csv("http://www.nathanielwoodward.com/drink_data_total.csv")
+drinkdat<-drinkdat%>%filter(Drinks<20)
+drinkdat%>%ggplot(aes(Drinks))+geom_bar()
+
+
+``` 
+
+```{R}
+fit<-lm(Drinks~Social*Stress,data=drinkdat)
+summary(fit)
+
+
+``` 
+
+
+```{R}
+library(pscl)
+zip_fit<-zeroinfl(Drinks~Social*Stress,data=drinkdat)
+summary(zip_fit)
+
+
+``` 
+
+
+```{R}
+library(MASS)
+mtcars$cyl<-factor(mtcars$cyl)
+ord_fit<-polr(cyl~hp,data=mtcars)
+coeftest(ord_fit)
+
+
+``` 
+
+
+```{R}
+library(nnet) #install.packages("nnet")
+
+multi_fit<-multinom(cyl~hp,data=mtcars)
+summary(multi_fit)
+exp(coef(multi_fit))
+
+#pvalues if you want: only 4 to 8 is significant!
+z<-summary(multi_fit)$coefficients/summary(multi_fit)$standard.errors
+(1-pnorm(abs(z)))*2
+
+
+``` 
+
+
+```{R}
+predict(multi_fit,type="probs")%>%round(3)%>%head()
+
+#confusion matrix
+table(predictions=predict(multi_fit,type="class"),truth=mtcars$cyl)
+
+
+``` 
+
+
+```{R}
+data(msleep)
+dat<-msleep%>%dplyr::select(bodywt,sleep_total, vore)%>%na.omit
+
+multi_fit<-multinom(vore~bodywt+sleep_total,data=dat)
+exp(coef(multi_fit))
+
+#pvalues if you want: insectivore near significant from carnivore
+z<-summary(multi_fit)$coefficients/summary(multi_fit)$standard.errors
+(1-pnorm(abs(z)))*2
+
+
+
+``` 
+
+
+```{R}
+predict(multi_fit,type="probs")%>%round(3)%>%head()
+
+#confusion matrix
+table(predictions=predict(multi_fit,type="class"),truth=dat$vore)
+```

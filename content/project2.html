@@ -1,0 +1,473 @@
+---
+title: "Project 2"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+
+<p>Neha Momin nbm522</p>
+<div id="r-markdown" class="section level2">
+<h2>R Markdown</h2>
+<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
+<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The data set shows percentage of traffic related fatalities by state along with corresponding laws to reduce potential fatalities. There are 51 observations and 11 observations in the original data set. The variables motorcycle, car, and suv measure the percent of fatalities in the respective motor vehicles. The primary enforcement variable is if the state has a law for primary enforcement, which allows a police officer to stop a vehicle if he suspects a seatbelt violation. The helmet law variable is if a state has a universal helmet law (yes), helmet laws for certain individuals (limit), or no universal laws (no). The dui_jailtime is if the state has laws for jailtime sentence for a DUI for more than 6 months (yes), 2 days to a week (limit), or only a few hours/a fine (no). The dui_score variable is a score of DUI citations in the state based on data for DUI related incidents. The speeding variable is a measure of the percent of fatalities due to speeding and the speedcamera variable is if the state has laws regarding the implementation of speeding cameras.</p>
+</div>
+<div id="manova" class="section level2">
+<h2>MANOVA</h2>
+<pre class="r"><code>traffic&lt;-read.csv(&quot;traffic.csv&quot;)
+traffic</code></pre>
+<pre><code>##                   state      party motorcycle suv car primary.enforcement
+## 1               Alabama republican          9  32  44                  no
+## 2                Alaska republican         15  30  28                 yes
+## 3               Arizona republican         15  21  27                 yes
+## 4              Arkansas republican         13  26  32                 yes
+## 5            California   democrat         14  36  35                  no
+## 6              Colorado   democrat         16  18  29                 yes
+## 7           Connecticut   democrat         17  33  43                  no
+## 8              Delaware   democrat         15  32  35                  no
+## 9  District of Columbia   democrat         26   3  23                 yes
+## 10              Florida republican         18  17  32                 yes
+## 11              Georgia republican         10  38  37                  no
+## 12               Hawaii   democrat         29  12  15                 yes
+## 13                Idaho republican         16  28  33                 yes
+## 14             Illinois   democrat         12  37  41                  no
+## 15              Indiana republican         14  35  42                  no
+## 16                 Iowa republican         14  35  40                  no
+## 17               Kansas republican         16  29  34                 yes
+## 18             Kentucky republican         13  39  41                  no
+## 19            Louisiana republican         10  19  32                 yes
+## 20                Maine   democrat         17  41  44                  no
+## 21             Maryland   democrat         12  40  39                  no
+## 22        Massachusetts   democrat         16  11  36                 yes
+## 23             Michigan republican         15  40  39                  no
+## 24            Minnesota   democrat         15  42  38                  no
+## 25          Mississippi republican          6  38  39                  no
+## 26             Missouri republican         12  36  40                  no
+## 27              Montana republican         12  12  26                 yes
+## 28             Nebraska republican         10  45  38                  no
+## 29               Nevada   democrat         18  23  31                 yes
+## 30        New Hampshire   democrat         19   8  35                  no
+## 31           New Jersey   democrat          9  13  36                  no
+## 32           New Mexico   democrat         12  24  29                 yes
+## 33             New York   democrat         16   6  32                 yes
+## 34       North Carolina republican         13  44  39                  no
+## 35         North Dakota republican         15  20  24                 yes
+## 36                 Ohio republican         14  37  44                  no
+## 37             Oklahoma republican         14  31  36                 yes
+## 38               Oregon   democrat         15  24  31                 yes
+## 39         Pennsylvania republican         14  38  39                  no
+## 40         Rhode Island   democrat         31  12  31                 yes
+## 41       South Carolina republican         14  22  38                  no
+## 42         South Dakota republican         12  32  38                  no
+## 43            Tennessee republican         16  31  39                  no
+## 44                Texas republican         11  47  32                 yes
+## 45                 Utah republican         18  14  33                 yes
+## 46              Vermont   democrat         10  26  33                  no
+## 47             Virginia   democrat         12  38  43                  no
+## 48           Washington   democrat         15  17  34                 yes
+## 49        West Virginia republican         13  23  36                  no
+## 50            Wisconsin republican         14  37  43                  no
+## 51              Wyoming republican         14  12  23                 yes
+##    helmet_law dui_jailtime dui_score speeding speedcamera
+## 1         yes           no      7.11       39          no
+## 2       limit           no      8.22       41          no
+## 3       limit        limit      6.89       35         yes
+## 4       limit          yes      6.63       18         yes
+## 5         yes          yes      5.91       35          no
+## 6       limit          yes      7.41       37          no
+## 7       limit          yes      5.38       46          no
+## 8       limit          yes      3.34       38          no
+## 9         yes          yes      3.23       34         yes
+## 10      limit          yes      5.33       21         yes
+## 11        yes           no      7.04       19         yes
+## 12      limit           no      6.20       54          no
+## 13      limit          yes      6.96       36          no
+## 14         no          yes      3.41       36         yes
+## 15      limit          yes      6.35       25         yes
+## 16         no        limit      6.45       17         yes
+## 17      limit        limit      6.50       27         yes
+## 18      limit           no      7.30       19         yes
+## 19        yes        limit      6.06       35          no
+## 20      limit        limit      7.48       38          no
+## 21        yes          yes      5.11       34         yes
+## 22        yes          yes      3.15       23          no
+## 23      limit          yes      5.32       24         yes
+## 24      limit          yes      5.49       23         yes
+## 25        yes           no     10.08       15         yes
+## 26        yes          yes      6.11       43          no
+## 27      limit           no     11.25       39          no
+## 28        yes          yes      6.47       13         yes
+## 29        yes        limit      6.51       37          no
+## 30         no           no      7.37       35          no
+## 31        yes          yes      3.60       16         yes
+## 32      limit           no      9.75       19         yes
+## 33        yes          yes      4.19       32         yes
+## 34        yes           no      9.24       39          no
+## 35      limit           no     10.60       23         yes
+## 36      limit          yes      4.04       28         yes
+## 37      limit        limit      5.93       32         yes
+## 38        yes        limit      7.35       33          no
+## 39      limit        limit      6.08       50          no
+## 40      limit          yes      4.18       34          no
+## 41      limit           no      9.17       38          no
+## 42      limit           no     12.32       31         yes
+## 43        yes          yes      6.59       21         yes
+## 44      limit        limit      7.52       40          no
+## 45      limit          yes      4.60       43          no
+## 46        yes          yes      6.58       30         yes
+## 47        yes        limit      5.35       19         yes
+## 48        yes        limit      6.50       42          no
+## 49        yes          yes      6.14       34          no
+## 50      limit           no      7.68       36          no
+## 51      limit           no     12.65       42          no</code></pre>
+<pre class="r"><code>library(ggplot2)
+ggplot(traffic, aes(x = car, y = suv)) +geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~primary.enforcement)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code>man1&lt;-manova(cbind(car,suv)~primary.enforcement, data=traffic)
+summary(man1)</code></pre>
+<pre><code>##                     Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## primary.enforcement  1 0.61172   37.811      2     48 1.379e-10 ***
+## Residuals           49                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man1)</code></pre>
+<pre><code>##  Response car :
+##                     Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## primary.enforcement  1 1144.10 1144.10  71.544 3.837e-11 ***
+## Residuals           49  783.58   15.99                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response suv :
+##                     Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## primary.enforcement  1 2486.0 2485.97  30.057 1.452e-06 ***
+## Residuals           49 4052.7   82.71                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pairwise.t.test(traffic$car,traffic$primary.enforcement,p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  traffic$car and traffic$primary.enforcement 
+## 
+##     no     
+## yes 3.8e-11
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(traffic$suv,traffic$primary.enforcement,p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  traffic$suv and traffic$primary.enforcement 
+## 
+##     no     
+## yes 1.5e-06
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>type1&lt;- 1-(.95^5)
+boneferroni&lt;- 0.05/5
+type1</code></pre>
+<pre><code>## [1] 0.2262191</code></pre>
+<pre class="r"><code>boneferroni</code></pre>
+<pre><code>## [1] 0.01</code></pre>
+<p>A one-way MANOVA was conducted to determine the effect of the primary enforcement laws on two dependent variables (car and suv fatalities). Examination of bivariate density plots for each group revealed departures from multivariate normality and homogeneity was not met. There are no significant outliers and observations are random and independent. Significant differences were found among presence of primary enforcement for at least one of the dependent variables, Pillai trace = 0.61, pseudo F(2, 48) = 37.81, p &lt; 0.0001. Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple comparisons. The probability of at least one Type I error is 0.226. The univariate ANOVAs for car and suv fatalities were also significant, F(1, 49) = 71.52, p &lt; 0.0001, F(1, 49) = 30.06, p &lt; 0.0001, respectively. Post hoc analysis was performed conducting pairwise comparisons to determine if primary enforcement differed for car and suv fatalities. Both groups were found to differ significantly from each other in terms of car and suv fatalities after bonferroni (α = .05/5 = 0.01). A total of 5 tests were conducted.</p>
+</div>
+<div id="randomization-test" class="section level2">
+<h2>Randomization Test</h2>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(vegan)</code></pre>
+<pre><code>## Loading required package: permute</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## This is vegan 2.5-6</code></pre>
+<pre class="r"><code>dists&lt;-traffic%&gt;%select(car, suv)%&gt;%dist()
+adonis(dists~speedcamera,data=traffic)</code></pre>
+<pre><code>## 
+## Call:
+## adonis(formula = dists ~ speedcamera, data = traffic) 
+## 
+## Permutation: free
+## Number of permutations: 999
+## 
+## Terms added sequentially (first to last)
+## 
+##             Df SumsOfSqs MeanSqs F.Model      R2 Pr(&gt;F)
+## speedcamera  1     276.7  276.68  1.6554 0.03268  0.216
+## Residuals   49    8189.7  167.14         0.96732       
+## Total       50    8466.4                 1.00000</code></pre>
+<pre class="r"><code>{hist(dists);abline(v=1.6554, col=&quot;red&quot;)}</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-2-1.png" width="672" />
+H0: Both DV (car and suv fatalities) means are equal across presence of speedcamera.
+HA: For at least one DV, presence of speedcamera mean is different
+Results of PERMANOVA show no significant difference in car and suv fatalities in the presence of a speeding camera. The p-value &gt; 0.05, therefore the null hypothesis is accepted. Car and suv fatality means are equal regardless of the presence of a speeding camera. This could mean that the primary reasoning behind average car and suv fatalities is not due to speeding, or that speed cameras do not have a large effect in mitigating fatalities.</p>
+<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression</h2>
+<pre class="r"><code>library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>library(sandwich)
+library(ggplot2)
+library(dplyr)
+traffic$dui_score_c &lt;- traffic$dui_score - mean(traffic$dui_score)
+fit&lt;- lm(motorcycle~helmet_law*dui_score_c, traffic)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = motorcycle ~ helmet_law * dui_score_c, data = traffic)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -7.1404 -2.3127 -0.6306  0.8026 13.0965 
+## 
+## Coefficients:
+##                           Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                16.0471     0.7675  20.907  &lt; 2e-16 ***
+## helmet_lawno                0.3322     2.7261   0.122  0.90354    
+## helmet_lawyes              -3.6154     1.2090  -2.990  0.00451 ** 
+## dui_score_c                -0.7458     0.3189  -2.338  0.02387 *  
+## helmet_lawno:dui_score_c    2.2359     1.3932   1.605  0.11552    
+## helmet_lawyes:dui_score_c  -0.4626     0.6097  -0.759  0.45196    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 3.975 on 45 degrees of freedom
+## Multiple R-squared:  0.2744, Adjusted R-squared:  0.1938 
+## F-statistic: 3.404 on 5 and 45 DF,  p-value: 0.0108</code></pre>
+<pre class="r"><code>ggplot(traffic, aes(dui_score_c,motorcycle)) + geom_smooth(method=&quot;lm&quot;) + geom_point(aes(color=helmet_law))</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>resids&lt;-lm(motorcycle~helmet_law*dui_score_c, traffic)$residuals
+fitted&lt;-lm(motorcycle~helmet_law*dui_score_c, traffic)$fitted.values
+ggplot()+geom_histogram(aes(resids),bins=10)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_point(aes(resids,fitted))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-3.png" width="672" /></p>
+<pre class="r"><code>resids&lt;-fit$residuals
+fitvals&lt;-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color=&#39;red&#39;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-4.png" width="672" /></p>
+<pre class="r"><code>bptest(fit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit
+## BP = 4.7274, df = 5, p-value = 0.45</code></pre>
+<pre class="r"><code>coeftest(fit, vcov = vcovHC(fit))[,1:2]</code></pre>
+<pre><code>##                             Estimate Std. Error
+## (Intercept)               16.0471470  0.9364308
+## helmet_lawno               0.3322440  3.0324732
+## helmet_lawyes             -3.6154269  1.2530919
+## dui_score_c               -0.7458104  0.3463774
+## helmet_lawno:dui_score_c   2.2359383  4.0558505
+## helmet_lawyes:dui_score_c -0.4626096  0.8467827</code></pre>
+<p>The coefficients show that for every 1% increase in motorcycle fatalities, the average DUI severity score of a state goes down by 0.75 points. Also, for states with an average DUI score, those with helmet laws have 3.62% less fatalities than states with limited helmet laws. Assumptions of normality, homoskedasticity, and linearity. After doing the regression with robust standard errors, the coefficients remain the same. The results show the DUI score is significantly associated with motorcycle fatalities for states with limited helmet laws and that the motorcycle fatalities are significantly different for states with helmet laws. The proportion of variation in the outcome explained by the model is 0.219.</p>
+<p>##Bootstrapped</p>
+<pre class="r"><code>set.seed(348)
+samp_distn&lt;-replicate(5000, {
+boot_dat &lt;- sample_frac(traffic, replace=T) 
+fit2 &lt;- lm(motorcycle~helmet_law*dui_score_c, data=boot_dat) 
+coef(fit2)
+})
+do.call(rbind,samp_distn) %&gt;% as.data.frame %&gt;% summarize_all(sd, na.rm=T)</code></pre>
+<pre><code>## Warning in (function (..., deparse.level = 1) : number of columns of result is
+## not a multiple of vector length (arg 22)</code></pre>
+<pre><code>##   (Intercept) helmet_lawno helmet_lawyes dui_score_c helmet_lawno:dui_score_c
+## 1   0.8613207     2.638777      1.304167   0.3767179                 3.660173
+##   helmet_lawyes:dui_score_c
+## 1                  1.048849</code></pre>
+<p>The bootstrapped SEs are not significantly different from the SEs in the orignal model or the robust SEs. The p-values also did not significantly change and the significant differences in motorcycle fatalities can still be seen in states with universal helmet laws.</p>
+<p>##Logistic Regression</p>
+<pre class="r"><code>library(plotROC)
+library(dplyr)
+library(lmtest)
+traffic2&lt;-traffic%&gt;%mutate(y=ifelse(primary.enforcement==&quot;yes&quot;,1,0))
+fit3&lt;- glm(y~party+helmet_law, traffic2, family=&quot;binomial&quot;)
+coeftest(fit3)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##                   Estimate Std. Error z value Pr(&gt;|z|)  
+## (Intercept)        0.75449    0.61785  1.2212  0.22203  
+## partyrepublican   -0.64262    0.65129 -0.9867  0.32379  
+## helmet_lawno     -18.11763 2249.06144 -0.0081  0.99357  
+## helmet_lawyes     -1.10016    0.65031 -1.6917  0.09069 .
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(coef(fit3))</code></pre>
+<pre><code>##     (Intercept) partyrepublican    helmet_lawno   helmet_lawyes 
+##    2.126521e+00    5.259128e-01    1.353988e-08    3.328179e-01</code></pre>
+<pre class="r"><code>prob&lt;-predict(fit3,type=&quot;response&quot;)
+class_diag(prob,traffic2$y)</code></pre>
+<pre><code>##        acc      sens      spec       ppv       auc
+## 1 0.627451 0.6956522 0.5714286 0.5714286 0.6708075</code></pre>
+<pre class="r"><code>pred&lt;-ifelse(prob&gt;.5,1,0)
+table(prediction=pred, truth=traffic2$y)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction  0  1 Sum
+##        0   16  7  23
+##        1   12 16  28
+##        Sum 28 23  51</code></pre>
+<pre class="r"><code>traffic2$logit&lt;-predict(fit3,type=&quot;link&quot;)
+traffic2%&gt;%ggplot()+geom_density(aes(logit,fill=primary.enforcement), alpha=.4)+
+theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab(&quot;predictor (logit)&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>ROCplot&lt;-ggplot(traffic2)+geom_roc(aes(d=y,m=prob), n.cuts=0)+
+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+ROCplot</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6708075</code></pre>
+<pre class="r"><code>traffic3&lt;- traffic2[ -c(1, 14) ]
+
+set.seed(1234)
+k=10 
+data&lt;-traffic3[sample(nrow(traffic3)),] 
+folds&lt;-cut(seq(1:nrow(traffic3)),breaks=k,labels=F) 
+diags&lt;-NULL
+for(i in 1:k){
+
+train&lt;-data[folds!=i,]
+test&lt;-data[folds==i,]
+truth&lt;-test$y
+
+fit4&lt;-glm(y~(.)^2,data=train,family=&quot;binomial&quot;)
+probs&lt;-predict(fit4,newdata = test,type=&quot;response&quot;)
+
+diags&lt;-rbind(diags,class_diag(probs,truth))
+}</code></pre>
+<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading
+
+## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading</code></pre>
+<pre class="r"><code>diags%&gt;%summarize_all(mean, na.rm=T)</code></pre>
+<pre><code>##   acc sens spec ppv auc
+## 1   1    1    1   1   1</code></pre>
+<p>Coefficients show that the odds of having primary enforcement in a republican state is 0.64 times lower than a democratic state. Also, the odds of having primary enforcement in a state with no universal helmet laws is about 18 times lower than states with limited helmet laws and 1.1 times lower in a state with universal helmet laws. The accuracy value from the model is 0.627, the TPR is 0.696, TNR is 0.571, recall is 0.571, and the AUC is 0.671. The AUC shows that the model has a poor performance. The ROC curve also does not show a good performance of the model. After the 10-fold CV is run, the accuracy, sensitivity, and recall are 1. The AUC is 0.9 which shows a better performance.</p>
+<p>##LASSO</p>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## Loaded glmnet 3.0-2</code></pre>
+<pre class="r"><code>traffic3&lt;- traffic2[-c(1)]
+y&lt;-as.matrix(traffic3$primary.enforcement) 
+x&lt;-model.matrix(primary.enforcement~.,data=traffic3)[,-1] 
+head(x)</code></pre>
+<pre><code>##   partyrepublican motorcycle suv car helmet_lawno helmet_lawyes dui_jailtimeno
+## 1               1          9  32  44            0             1              1
+## 2               1         15  30  28            0             0              1
+## 3               1         15  21  27            0             0              0
+## 4               1         13  26  32            0             0              0
+## 5               0         14  36  35            0             1              0
+## 6               0         16  18  29            0             0              0
+##   dui_jailtimeyes dui_score speeding speedcamerayes dui_score_c y      logit
+## 1               0      7.11       39              0  0.44098039 0 -0.9882924
+## 2               0      8.22       41              0  1.55098039 1  0.1118674
+## 3               0      6.89       35              1  0.22098039 1  0.1118674
+## 4               1      6.63       18              1 -0.03901961 1  0.1118674
+## 5               1      5.91       35              0 -0.75901961 0 -0.3456725
+## 6               1      7.41       37              0  0.74098039 1  0.7544873</code></pre>
+<pre class="r"><code>cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 15 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                        s0
+## (Intercept)     -7.400697
+## partyrepublican  .       
+## motorcycle       .       
+## suv              .       
+## car              .       
+## helmet_lawno     .       
+## helmet_lawyes    .       
+## dui_jailtimeno   .       
+## dui_jailtimeyes  .       
+## dui_score        .       
+## speeding         .       
+## speedcamerayes   .       
+## dui_score_c      .       
+## y               14.604598
+## logit            .</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+
+data1&lt;-traffic3[sample(nrow(traffic3)),] 
+folds&lt;-cut(seq(1:nrow(traffic3)),breaks=k,labels=F) 
+diags&lt;-NULL
+for(i in 1:k){
+
+train&lt;-data1[folds!=i,]
+test&lt;-data1[folds==i,]
+truth&lt;-traffic3$primary.enforcement
+
+y&lt;-as.matrix(traffic3$primary.enforcement) 
+x&lt;-model.matrix(primary.enforcement~.,data=traffic3)[,-1] 
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+lassoprob&lt;- predict(lasso, newx=x, type=&quot;response&quot;)
+diags&lt;-rbind(diags,class_diag(lassoprob,truth))}</code></pre>
+<pre><code>## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion
+
+## Warning in class_diag(lassoprob, truth): NAs introduced by coercion</code></pre>
+<pre class="r"><code>diags%&gt;%summarize_all(mean)</code></pre>
+<pre><code>##   acc sens spec ppv auc
+## 1  NA   NA   NA  NA  NA</code></pre>
+<p>The variables that are retained from the LASSO regression is only the binary variable of primary enforcement. After running the 10-fold CV, the AUC results in a value of 1. Compared to the original regression previously done, this has a better performance.</p>
+</div>

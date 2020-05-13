@@ -1,0 +1,52 @@
+﻿state,party,motorcycle,suv,car,primary enforcement,helmet_law,dui_jailtime,dui_score,speeding,speedcamera
+Alabama,republican,9,32,44,no,yes,no,7.11,39,no
+Alaska,republican,15,30,28,yes,limit,no,8.22,41,no
+Arizona,republican,15,21,27,yes,limit,limit,6.89,35,yes
+Arkansas,republican,13,26,32,yes,limit,yes,6.63,18,yes
+California,democrat,14,36,35,no,yes,yes,5.91,35,no
+Colorado,democrat,16,18,29,yes,limit,yes,7.41,37,no
+Connecticut,democrat,17,33,43,no,limit,yes,5.38,46,no
+Delaware,democrat,15,32,35,no,limit,yes,3.34,38,no
+District of Columbia,democrat,26,3,23,yes,yes,yes,3.23,34,yes
+Florida,republican,18,17,32,yes,limit,yes,5.33,21,yes
+Georgia,republican,10,38,37,no,yes,no,7.04,19,yes
+Hawaii,democrat,29,12,15,yes,limit,no,6.2,54,no
+Idaho,republican,16,28,33,yes,limit,yes,6.96,36,no
+Illinois,democrat,12,37,41,no,no,yes,3.41,36,yes
+Indiana,republican,14,35,42,no,limit,yes,6.35,25,yes
+Iowa,republican,14,35,40,no,no,limit,6.45,17,yes
+Kansas,republican,16,29,34,yes,limit,limit,6.5,27,yes
+Kentucky,republican,13,39,41,no,limit,no,7.3,19,yes
+Louisiana,republican,10,19,32,yes,yes,limit,6.06,35,no
+Maine,democrat,17,41,44,no,limit,limit,7.48,38,no
+Maryland,democrat,12,40,39,no,yes,yes,5.11,34,yes
+Massachusetts,democrat,16,11,36,yes,yes,yes,3.15,23,no
+Michigan,republican,15,40,39,no,limit,yes,5.32,24,yes
+Minnesota,democrat,15,42,38,no,limit,yes,5.49,23,yes
+Mississippi,republican,6,38,39,no,yes,no,10.08,15,yes
+Missouri,republican,12,36,40,no,yes,yes,6.11,43,no
+Montana,republican,12,12,26,yes,limit,no,11.25,39,no
+Nebraska,republican,10,45,38,no,yes,yes,6.47,13,yes
+Nevada,democrat,18,23,31,yes,yes,limit,6.51,37,no
+New Hampshire,democrat,19,8,35,no,no,no,7.37,35,no
+New Jersey,democrat,9,13,36,no,yes,yes,3.6,16,yes
+New Mexico,democrat,12,24,29,yes,limit,no,9.75,19,yes
+New York,democrat,16,6,32,yes,yes,yes,4.19,32,yes
+North Carolina,republican,13,44,39,no,yes,no,9.24,39,no
+North Dakota,republican,15,20,24,yes,limit,no,10.6,23,yes
+Ohio,republican,14,37,44,no,limit,yes,4.04,28,yes
+Oklahoma,republican,14,31,36,yes,limit,limit,5.93,32,yes
+Oregon,democrat,15,24,31,yes,yes,limit,7.35,33,no
+Pennsylvania,republican,14,38,39,no,limit,limit,6.08,50,no
+Rhode Island,democrat,31,12,31,yes,limit,yes,4.18,34,no
+South Carolina,republican,14,22,38,no,limit,no,9.17,38,no
+South Dakota,republican,12,32,38,no,limit,no,12.32,31,yes
+Tennessee,republican,16,31,39,no,yes,yes,6.59,21,yes
+Texas,republican,11,47,32,yes,limit,limit,7.52,40,no
+Utah,republican,18,14,33,yes,limit,yes,4.6,43,no
+Vermont,democrat,10,26,33,no,yes,yes,6.58,30,yes
+Virginia,democrat,12,38,43,no,yes,limit,5.35,19,yes
+Washington,democrat,15,17,34,yes,yes,limit,6.5,42,no
+West Virginia,republican,13,23,36,no,yes,yes,6.14,34,no
+Wisconsin,republican,14,37,43,no,limit,no,7.68,36,no
+Wyoming,republican,14,12,23,yes,limit,no,12.65,42,no

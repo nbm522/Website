@@ -1,0 +1,199 @@
+---
+title: "Project 2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Neha Momin nbm522
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+class_diag<-function(probs,truth){
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Introduction
+
+The data set shows percentage of traffic related fatalities by state along with corresponding laws to reduce potential fatalities. There are 51 observations and 11 observations in the original data set. The variables motorcycle, car, and suv measure the percent of fatalities in the respective motor vehicles. The primary enforcement variable is if the state has a law for primary enforcement, which allows a police officer to stop a vehicle if he suspects a seatbelt violation. The helmet law variable is if a state has a universal helmet law (yes), helmet laws for certain individuals (limit), or no universal laws (no). The dui_jailtime is if the state has laws for jailtime sentence for a DUI for more than 6 months (yes), 2 days to a week (limit), or only a few hours/a fine (no). The dui_score variable is a score of DUI citations in the state based on data for DUI related incidents. The speeding variable is a measure of the percent of fatalities due to speeding and the speedcamera variable is if the state has laws regarding the implementation of speeding cameras. 
+
+## MANOVA
+
+```{r}
+traffic<-read.csv("traffic.csv")
+traffic
+library(ggplot2)
+ggplot(traffic, aes(x = car, y = suv)) +geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~primary.enforcement)
+man1<-manova(cbind(car,suv)~primary.enforcement, data=traffic)
+summary(man1)
+summary.aov(man1)
+pairwise.t.test(traffic$car,traffic$primary.enforcement,p.adj="none")
+pairwise.t.test(traffic$suv,traffic$primary.enforcement,p.adj="none")
+type1<- 1-(.95^5)
+boneferroni<- 0.05/5
+type1
+boneferroni
+```
+A one-way MANOVA was conducted to determine the effect of the primary enforcement laws on two dependent variables (car and suv fatalities). Examination of bivariate density plots for each group revealed departures from multivariate normality and homogeneity was not met. There are no significant outliers and observations are random and independent. Significant differences were found among presence of primary enforcement for at least one of the dependent variables, Pillai trace = 0.61, pseudo F(2, 48) = 37.81, p < 0.0001. Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple comparisons. The probability of at least one Type I error is 0.226. The univariate ANOVAs for car and suv fatalities were also significant, F(1, 49) = 71.52, p < 0.0001, F(1, 49) = 30.06,  p < 0.0001, respectively. Post hoc analysis was performed conducting pairwise comparisons to determine if primary enforcement differed for car and suv fatalities. Both groups were found to differ significantly from each other in terms of car and suv fatalities after bonferroni (α = .05/5 = 0.01). A total of 5 tests were conducted.
+
+## Randomization Test
+
+```{r}
+library(dplyr)
+library(vegan)
+dists<-traffic%>%select(car, suv)%>%dist()
+adonis(dists~speedcamera,data=traffic)
+{hist(dists);abline(v=1.6554, col="red")}
+```
+H0: Both DV (car and suv fatalities) means are equal across presence of speedcamera.
+HA: For at least one DV, presence of speedcamera mean is different 
+Results of PERMANOVA show no significant difference in car and suv fatalities in the presence of a speeding camera. The p-value > 0.05, therefore the null hypothesis is accepted. Car and suv fatality means are equal regardless of the presence of a speeding camera. This could mean that the primary reasoning behind average car and suv fatalities is not due to speeding, or that speed cameras do not have a large effect in mitigating fatalities. 
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Linear Regression
+
+```{r}
+library(lmtest)
+library(sandwich)
+library(ggplot2)
+library(dplyr)
+traffic$dui_score_c <- traffic$dui_score - mean(traffic$dui_score)
+fit<- lm(motorcycle~helmet_law*dui_score_c, traffic)
+summary(fit)
+
+ggplot(traffic, aes(dui_score_c,motorcycle)) + geom_smooth(method="lm") + geom_point(aes(color=helmet_law))
+resids<-lm(motorcycle~helmet_law*dui_score_c, traffic)$residuals
+fitted<-lm(motorcycle~helmet_law*dui_score_c, traffic)$fitted.values
+ggplot()+geom_histogram(aes(resids),bins=10)
+ggplot()+geom_point(aes(resids,fitted))
+resids<-fit$residuals
+fitvals<-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')
+bptest(fit)
+coeftest(fit, vcov = vcovHC(fit))[,1:2]
+```
+The coefficients show that for every 1% increase in motorcycle fatalities, the average DUI severity score of a state goes down by 0.75 points. Also, for states with an average DUI score, those with helmet laws have 3.62% less fatalities than states with limited helmet laws. Assumptions of normality, homoskedasticity, and linearity. After doing the regression with robust standard errors, the coefficients remain the same. The results show the DUI score is significantly associated with motorcycle fatalities for states with limited helmet laws and that the motorcycle fatalities are significantly different for states with helmet laws. The proportion of variation in the outcome explained by the model is 0.219.
+
+##Bootstrapped
+
+```{r}
+set.seed(348)
+samp_distn<-replicate(5000, {
+boot_dat <- sample_frac(traffic, replace=T) 
+fit2 <- lm(motorcycle~helmet_law*dui_score_c, data=boot_dat) 
+coef(fit2)
+})
+do.call(rbind,samp_distn) %>% as.data.frame %>% summarize_all(sd, na.rm=T)
+```
+The bootstrapped SEs are not significantly different from the SEs in the orignal model or the robust SEs. The p-values also did not significantly change and the significant differences in motorcycle fatalities can still be seen in states with universal helmet laws. 
+
+##Logistic Regression
+
+```{r}
+library(plotROC)
+traffic2<-traffic%>%mutate(y=ifelse(primary.enforcement=="yes",1,0))
+fit3<- glm(y~party+helmet_law, traffic2, family="binomial")
+coeftest(fit3)
+exp(coef(fit3))
+prob<-predict(fit3,type="response")
+class_diag(prob,traffic2$y)
+pred<-ifelse(prob>.5,1,0)
+table(prediction=pred, truth=traffic2$y)%>%addmargins
+
+traffic2$logit<-predict(fit3,type="link")
+traffic2%>%ggplot()+geom_density(aes(logit,fill=primary.enforcement), alpha=.4)+
+theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("predictor (logit)")
+
+ROCplot<-ggplot(traffic2)+geom_roc(aes(d=y,m=prob), n.cuts=0)+
+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+ROCplot
+calc_auc(ROCplot)
+traffic3<- traffic2[ -c(1, 12, 14) ]
+
+set.seed(1234)
+k=10 
+data<-traffic3[sample(nrow(traffic3)),] 
+folds<-cut(seq(1:nrow(traffic3)),breaks=k,labels=F) 
+diags<-NULL
+for(i in 1:k){
+
+train<-data[folds!=i,]
+test<-data[folds==i,]
+truth<-test$primary.enforcement
+
+fit4<-glm(primary.enforcement~(.)^2,data=train,family="binomial")
+probs<-predict(fit4,newdata = test,type="response")
+
+diags<-rbind(diags,class_diag(probs,truth))
+}
+diags%>%summarize_all(mean, na.rm=T)
+```
+Coefficients show that the odds of having primary enforcement in a republican state is 0.64 times lower than a democratic state. Also, the odds of having primary enforcement in a state with no universal helmet laws is about 18 times lower than states with limited helmet laws and 1.1 times lower in a state with universal helmet laws. The accuracy value from the model is 0.627, the TPR is 0.696, TNR is 0.571, recall is 0.571, and the AUC is 0.671. The AUC shows that the model has a poor performance. The ROC curve also does not show a good performance of the model. After the 10-fold CV is run, the accuracy, sensitivity, and recall are 1. The AUC is 0.9 which shows a better performance. 
+
+##LASSO
+
+```{r}
+library(glmnet)
+traffic3<- traffic2[-c(1)]
+y<-as.matrix(traffic3$primary.enforcement) 
+x<-model.matrix(primary.enforcement~.,data=traffic3)[,-1] 
+head(x)
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso)
+
+set.seed(1234)
+k=10
+
+data1<-traffic3[sample(nrow(traffic3)),] 
+folds<-cut(seq(1:nrow(traffic3)),breaks=k,labels=F) 
+diags<-NULL
+for(i in 1:k){
+
+train<-data1[folds!=i,]
+test<-data1[folds==i,]
+truth<-traffic3$primary.enforcement
+
+y<-as.matrix(traffic3$primary.enforcement) 
+x<-model.matrix(primary.enforcement~.,data=traffic3)[,-1] 
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+lassoprob<- predict(lasso, newx=x, type="response")
+diags<-rbind(diags,class_diag(lassoprob,truth))}
+
+diags%>%summarize_all(mean)
+```
+The variables that are retained from the LASSO regression is only the binary variable of primary enforcement. After running the 10-fold CV, the AUC results in a value of 1. Compared to the original regression previously done, this has a better performance.  
+
+

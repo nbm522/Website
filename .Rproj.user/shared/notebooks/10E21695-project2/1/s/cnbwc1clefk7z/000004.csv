@@ -1,0 +1,3 @@
+"0","resids<-lm(motorcycle~helmet_law*dui_score_c, traffic)$residuals"
+"0","fitted<-lm(motorcycle~helmet_law*dui_score_c, traffic)$fitted.values"
+"0","ggplot()+geom_histogram(aes(resids),bins=10)"

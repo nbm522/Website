@@ -1,0 +1,2 @@
+"0","library(ggplot2)"
+"0","ggplot(traffic, aes(x = car, y = suv)) +geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~primary.enforcement)"

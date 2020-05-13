@@ -1,0 +1,300 @@
+---
+title: "Project 1"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+<p>Neha Momin nbm522</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The first dataset is bad_drivers and it contains information on the number of drivers involved in a fatal collision per billion miles, the percent of drivers involved in a collision while speeding, percent of drivers in a collision that were alcohol impaired, the percent of drivers that were not distracted during the collision, the percent of drivers in a collision with no previous accidents, the average insurance premiums by state, and the losses incurred by the insurance companies for collisions per insured driver. I obtained this dataset through the “fivethirtyeight” package. This dataset was interesting to me because I wanted to see the how insurance premiums differ by certain accidents (if it was due to speeding, impaired driving, etc.).
+The next dataset is camera and it contains information on presence of red light cameras and speeding cameras (if they are not found, limited to certain areas, or always found in differerent states), the total number of active duty officers and registered drivers in each state, and the winning party of the state in the last election. I created this dataset by compiling data from websites of the Bureau of Transportation, Bureau of Justice, and NPR. This dataset was interesting to me because I wanted to see if there was a difference in the number of officers based on traffic camera laws in each state. I also wanted to know if there was any relation between having traffic camera laws and the majority party of the state.
+I expect that the number of drivers involved in collisions will be higher in states where there are no speeding cameras or red light cameras. There will also be higher speeding related collisions where there are limited speeding cameras or no speeding cameras. I also beleive that largely republican states will not have the presence of speeding or red light cameras but democratic states might have them. I expect that insurance premiums are probably higher in states where there is a higher number of drivers involved in collisions.</p>
+</div>
+<div id="joiningmergingtidying" class="section level2">
+<h2>Joining/Merging/Tidying</h2>
+<pre class="r"><code>library(tidyverse)
+library(fivethirtyeight)
+library(GGally)
+library(formatR)
+
+camera &lt;- read.csv(&quot;camera.csv&quot;)
+bad_drivers &lt;- bad_drivers
+
+traffic &lt;- full_join(bad_drivers, camera, by = &quot;state&quot;)
+glimpse(traffic)</code></pre>
+<pre><code>## Observations: 51
+## Variables: 13
+## $ state               &lt;chr&gt; &quot;Alabama&quot;, &quot;Alaska&quot;, &quot;Arizona&quot;, &quot;Arkansas&quot;, &quot;Cali…
+## $ num_drivers         &lt;dbl&gt; 18.8, 18.1, 18.6, 22.4, 12.0, 13.6, 10.8, 16.2, 5…
+## $ perc_speeding       &lt;int&gt; 39, 41, 35, 18, 35, 37, 46, 38, 34, 21, 19, 54, 3…
+## $ perc_alcohol        &lt;int&gt; 30, 25, 28, 26, 28, 28, 36, 30, 27, 29, 25, 41, 2…
+## $ perc_not_distracted &lt;int&gt; 96, 90, 84, 94, 91, 79, 87, 87, 100, 92, 95, 82, …
+## $ perc_no_previous    &lt;int&gt; 80, 94, 96, 95, 89, 95, 82, 99, 100, 94, 93, 87, …
+## $ insurance_premiums  &lt;dbl&gt; 784.55, 1053.48, 899.47, 827.34, 878.41, 835.50, …
+## $ losses              &lt;dbl&gt; 145.08, 133.93, 110.35, 142.39, 165.63, 139.91, 1…
+## $ redcamera           &lt;fct&gt; limit, no, yes, limit, yes, yes, no, yes, yes, ye…
+## $ speedcamera         &lt;fct&gt; no, no, yes, no, no, limit, no, no, yes, no, no, …
+## $ officers            &lt;int&gt; 10775, 1285, 12069, 5763, 77584, 11255, 8355, 227…
+## $ party               &lt;fct&gt; republican, republican, republican, republican, d…
+## $ drivers             &lt;int&gt; 3859403, 528873, 4791450, 2097201, 24390236, 3837…</code></pre>
+<pre class="r"><code>merge &lt;- traffic %&gt;% select(&quot;state&quot;, &quot;redcamera&quot;, &quot;speedcamera&quot;, 
+    &quot;num_drivers&quot;, &quot;perc_speeding&quot;, &quot;officers&quot;)
+mergelong &lt;- merge %&gt;% pivot_longer(c(&quot;redcamera&quot;, &quot;speedcamera&quot;), 
+    names_to = &quot;type&quot;, values_to = &quot;presence&quot;)
+glimpse(mergelong)</code></pre>
+<pre><code>## Observations: 102
+## Variables: 6
+## $ state         &lt;chr&gt; &quot;Alabama&quot;, &quot;Alabama&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Arizona&quot;, &quot;A…
+## $ num_drivers   &lt;dbl&gt; 18.8, 18.8, 18.1, 18.1, 18.6, 18.6, 22.4, 22.4, 12.0, 1…
+## $ perc_speeding &lt;int&gt; 39, 39, 41, 41, 35, 35, 18, 18, 35, 35, 37, 37, 46, 46,…
+## $ officers      &lt;int&gt; 10775, 10775, 1285, 1285, 12069, 12069, 5763, 5763, 775…
+## $ type          &lt;chr&gt; &quot;redcamera&quot;, &quot;speedcamera&quot;, &quot;redcamera&quot;, &quot;speedcamera&quot;,…
+## $ presence      &lt;fct&gt; limit, no, no, no, yes, yes, limit, no, yes, no, yes, l…</code></pre>
+<pre class="r"><code>mergewide &lt;- mergelong %&gt;% pivot_wider(names_from = &quot;type&quot;, values_from = &quot;presence&quot;)
+glimpse(mergewide)</code></pre>
+<pre><code>## Observations: 51
+## Variables: 6
+## $ state         &lt;chr&gt; &quot;Alabama&quot;, &quot;Alaska&quot;, &quot;Arizona&quot;, &quot;Arkansas&quot;, &quot;California…
+## $ num_drivers   &lt;dbl&gt; 18.8, 18.1, 18.6, 22.4, 12.0, 13.6, 10.8, 16.2, 5.9, 17…
+## $ perc_speeding &lt;int&gt; 39, 41, 35, 18, 35, 37, 46, 38, 34, 21, 19, 54, 36, 36,…
+## $ officers      &lt;int&gt; 10775, 1285, 12069, 5763, 77584, 11255, 8355, 2274, 431…
+## $ redcamera     &lt;fct&gt; limit, no, yes, limit, yes, yes, no, yes, yes, yes, yes…
+## $ speedcamera   &lt;fct&gt; no, no, yes, no, no, limit, no, no, yes, no, no, no, no…</code></pre>
+<p>A full join was done for this because the one common factor between the two datasets was the “state” variable and there were no other repeats in variables. There were no observations that were dropped as a result of the join because the “state” variable had exact matches in each dataset. I selected a certain subset of data (merge) to untidy since my datasets were already tidy. I used pivot_longer to put the “type” of camera in a new column as well as the presence of it in the state (mergelong). This doubled the number of observations because there are two types of cameras (red light and speed) in the traffic dataset. That untidied the data so to revert it back to the tidy format I used pivot_wider to make one observation for each state (mergewide). This resulted in each type of camera getting its own column and the presence of it explained within those columns.</p>
+</div>
+<div id="wrangling--dplyr-functions" class="section level2">
+<h2>Wrangling- dplyr Functions</h2>
+<pre class="r"><code>traffic1 &lt;- traffic %&gt;% filter(speedcamera == &quot;no&quot;) %&gt;% select(state, 
+    perc_speeding, party) %&gt;% arrange(desc(perc_speeding))
+glimpse(traffic1)</code></pre>
+<pre><code>## Observations: 39
+## Variables: 3
+## $ state         &lt;chr&gt; &quot;Hawaii&quot;, &quot;Pennsylvania&quot;, &quot;Connecticut&quot;, &quot;Missouri&quot;, &quot;U…
+## $ perc_speeding &lt;int&gt; 54, 50, 46, 43, 43, 42, 41, 40, 39, 39, 39, 38, 38, 38,…
+## $ party         &lt;fct&gt; democrat, republican, democrat, republican, republican,…</code></pre>
+<pre class="r"><code>traffic &lt;- traffic %&gt;% mutate(driver_officer = drivers/officers)
+glimpse(traffic)</code></pre>
+<pre><code>## Observations: 51
+## Variables: 14
+## $ state               &lt;chr&gt; &quot;Alabama&quot;, &quot;Alaska&quot;, &quot;Arizona&quot;, &quot;Arkansas&quot;, &quot;Cali…
+## $ num_drivers         &lt;dbl&gt; 18.8, 18.1, 18.6, 22.4, 12.0, 13.6, 10.8, 16.2, 5…
+## $ perc_speeding       &lt;int&gt; 39, 41, 35, 18, 35, 37, 46, 38, 34, 21, 19, 54, 3…
+## $ perc_alcohol        &lt;int&gt; 30, 25, 28, 26, 28, 28, 36, 30, 27, 29, 25, 41, 2…
+## $ perc_not_distracted &lt;int&gt; 96, 90, 84, 94, 91, 79, 87, 87, 100, 92, 95, 82, …
+## $ perc_no_previous    &lt;int&gt; 80, 94, 96, 95, 89, 95, 82, 99, 100, 94, 93, 87, …
+## $ insurance_premiums  &lt;dbl&gt; 784.55, 1053.48, 899.47, 827.34, 878.41, 835.50, …
+## $ losses              &lt;dbl&gt; 145.08, 133.93, 110.35, 142.39, 165.63, 139.91, 1…
+## $ redcamera           &lt;fct&gt; limit, no, yes, limit, yes, yes, no, yes, yes, ye…
+## $ speedcamera         &lt;fct&gt; no, no, yes, no, no, limit, no, no, yes, no, no, …
+## $ officers            &lt;int&gt; 10775, 1285, 12069, 5763, 77584, 11255, 8355, 227…
+## $ party               &lt;fct&gt; republican, republican, republican, republican, d…
+## $ drivers             &lt;int&gt; 3859403, 528873, 4791450, 2097201, 24390236, 3837…
+## $ driver_officer      &lt;dbl&gt; 358.18125, 411.57432, 397.00472, 363.90786, 314.3…</code></pre>
+<pre class="r"><code>traffic2 &lt;- traffic %&gt;% group_by(redcamera, party) %&gt;% summarize(mean(num_drivers, 
+    na.rm = T))
+head(traffic2)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+## # Groups:   redcamera [3]
+##   redcamera party      `mean(num_drivers, na.rm = T)`
+##   &lt;fct&gt;     &lt;fct&gt;                               &lt;dbl&gt;
+## 1 limit     democrat                             13.4
+## 2 limit     republican                           18.1
+## 3 no        democrat                             12.2
+## 4 no        republican                           18.0
+## 5 yes       democrat                             12.4
+## 6 yes       republican                           18.4</code></pre>
+<p>For the dplyr functions, the data was first filtered the data by states with no speeding cameras and selected the state, percent speeding, and political party column. Then it was arranged in descending order by percent speeding due to speeding. This showed a table where Hawaii (democratic state) had the highest percent of collisions where the driver was speeding. For the next chain, the data was mutated to create a ratio of registered drivers to officers. On average for every one officer there are 340.484 officers. For the last chain, the data was grouped by the presence of red light cameras and political party, then summarize was used to find the mean number of drivers involved in accidents for each category. The data showed that drivers from republican states were involved in more collisions and that states with limited cameras see the most number of drivers in collisions.</p>
+</div>
+<div id="wrangling--summary-statistics" class="section level2">
+<h2>Wrangling- Summary Statistics</h2>
+<pre class="r"><code>traffic3 &lt;- traffic %&gt;% group_by(speedcamera) %&gt;% summarize(mean_premium = mean(insurance_premiums, 
+    na.rm = T), sd_speeding = sd(perc_speeding, na.rm = T), n = n(), 
+    se_speeding = sd_speeding/sqrt(n))
+head(traffic3)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   speedcamera mean_premium sd_speeding     n se_speeding
+##   &lt;fct&gt;              &lt;dbl&gt;       &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt;
+## 1 limit               876.        7.37     7        2.78
+## 2 no                  867.       10.5     39        1.68
+## 3 yes                1054.        6.06     5        2.71</code></pre>
+<pre class="r"><code>traffic4 &lt;- traffic %&gt;% group_by(party, redcamera) %&gt;% summarize(median_officers = median(officers, 
+    na.rm = T))
+head(traffic4)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+## # Groups:   party [2]
+##   party      redcamera median_officers
+##   &lt;fct&gt;      &lt;fct&gt;               &lt;dbl&gt;
+## 1 democrat   limit              18352 
+## 2 democrat   no                  5658.
+## 3 democrat   yes                 5470.
+## 4 republican limit              21620 
+## 5 republican no                  4944.
+## 6 republican yes                16095</code></pre>
+<pre class="r"><code>traffic5 &lt;- traffic %&gt;% summarize(mean(num_drivers, na.rm = T), 
+    n_distinct(speedcamera))
+head(traffic5)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   `mean(num_drivers, na.rm = T)` `n_distinct(speedcamera)`
+##                            &lt;dbl&gt;                     &lt;int&gt;
+## 1                           15.8                         3</code></pre>
+<pre class="r"><code>max(traffic$perc_speeding)</code></pre>
+<pre><code>## [1] 54</code></pre>
+<pre class="r"><code>min(traffic$officers)</code></pre>
+<pre><code>## [1] 1147</code></pre>
+<pre class="r"><code>r &lt;- range(traffic$num_drivers)
+diff(r)</code></pre>
+<pre><code>## [1] 18</code></pre>
+<pre class="r"><code>traffic6 &lt;- traffic %&gt;% na.omit %&gt;% select_if(is.numeric)
+cor(traffic6)</code></pre>
+<pre><code>##                      num_drivers perc_speeding perc_alcohol perc_not_distracted
+## num_drivers          1.000000000  -0.029080146   0.19942634         0.009781764
+## perc_speeding       -0.029080146   1.000000000   0.28624417         0.131737796
+## perc_alcohol         0.199426344   0.286244171   1.00000000         0.043379788
+## perc_not_distracted  0.009781764   0.131737796   0.04337979         1.000000000
+## perc_no_previous    -0.017941877   0.014066221  -0.24545506        -0.195264522
+## insurance_premiums  -0.199701946   0.042541263  -0.01745071         0.019578112
+## losses              -0.036011082  -0.061240523  -0.08391593        -0.058466772
+## officers            -0.147698780  -0.011226875  -0.01619424         0.120136780
+## drivers             -0.129552853  -0.004701375  -0.02793442         0.116188678
+## driver_officer       0.175197430  -0.090796076  -0.05277780        -0.185700962
+##                     perc_no_previous insurance_premiums      losses    officers
+## num_drivers             -0.017941877        -0.19970195 -0.03601108 -0.14769878
+## perc_speeding            0.014066221         0.04254126 -0.06124052 -0.01122688
+## perc_alcohol            -0.245455060        -0.01745071 -0.08391593 -0.01619424
+## perc_not_distracted     -0.195264522         0.01957811 -0.05846677  0.12013678
+## perc_no_previous         1.000000000         0.07553314  0.04277014 -0.15396722
+## insurance_premiums       0.075533138         1.00000000  0.62311644  0.29478006
+## losses                   0.042770136         0.62311644  1.00000000  0.40769061
+## officers                -0.153967222         0.29478006  0.40769061  1.00000000
+## drivers                 -0.145954110         0.18676796  0.36293082  0.96333012
+## driver_officer          -0.007779604        -0.55893083 -0.51377468 -0.40354571
+##                          drivers driver_officer
+## num_drivers         -0.129552853    0.175197430
+## perc_speeding       -0.004701375   -0.090796076
+## perc_alcohol        -0.027934424   -0.052777804
+## perc_not_distracted  0.116188678   -0.185700962
+## perc_no_previous    -0.145954110   -0.007779604
+## insurance_premiums   0.186767958   -0.558930832
+## losses               0.362930816   -0.513774684
+## officers             0.963330124   -0.403545705
+## drivers              1.000000000   -0.244720954
+## driver_officer      -0.244720954    1.000000000</code></pre>
+<pre class="r"><code>traffic7 &lt;- traffic %&gt;% group_by(party, speedcamera) %&gt;% summarise_at(vars(num_drivers, 
+    perc_speeding, officers), list(mean = mean, median = median, 
+    sd = sd), na.rm = TRUE)
+head(traffic7)</code></pre>
+<pre><code>## # A tibble: 6 x 11
+## # Groups:   party [2]
+##   party speedcamera num_drivers_mean perc_speeding_m… officers_mean
+##   &lt;fct&gt; &lt;fct&gt;                  &lt;dbl&gt;            &lt;dbl&gt;         &lt;dbl&gt;
+## 1 demo… limit                   13.4             33.2        21026 
+## 2 demo… no                      12.6             32.9        13581 
+## 3 demo… yes                      9.2             34           9884.
+## 4 repu… limit                   14.1             28          21620 
+## 5 repu… no                      18.1             30.9        11947.
+## 6 repu… yes                     19.5             30.3        14579.
+## # … with 6 more variables: num_drivers_median &lt;dbl&gt;,
+## #   perc_speeding_median &lt;dbl&gt;, officers_median &lt;dbl&gt;, num_drivers_sd &lt;dbl&gt;,
+## #   perc_speeding_sd &lt;dbl&gt;, officers_sd &lt;dbl&gt;</code></pre>
+<p>The summary statistics in the first chain grouped data by the presence of speed cameras and showed that the highest insurance premiums can be seen in states that have the presence of speed cameras. This could be because the drivers should be aware of thier speed if the cameras are present, therefore if they do get into a collision they are more liable. The standard of error for the percent of collisions from speeding is highest in states with no speeding cameras and this large variation could be due to different penalties for speeding tickets. It can also be seen that states with no speeding cameras are far more common that states with a presence. The standard of error for speeding collisions is lowest in states with no speeding cameras and is about similar in states with cameras. In the next chain, the data is grouped by political party and presence of red light cameras and shows the median number of officers is highest in republican states with limited presence of red light cameras. The third chain shows the mean number of drivers involved in a collision is 15.79 and that there are 3 distinct groups for the presence of speeding cameras (yes, no, limit). The maximum value for the percent of collisions due to speeding is 54%. The minimum value for active duty officers is 1147 which is in Vermont. This could be due to the fact that Vermont is a smaller state with a smaller population. The range value for the number of drivers in a collision is 18.
+A correlation test for numeric variables shows the highest correlation between the number of active duty officers and registered drivers. The last chain grouped the data by the presence of a speed camera and party and summarized the mean, median, and standard of deviation for the number of drivers, percent of collisions due to speeding, and officers. The lowest mean number of drivers in collisions can be seen in democratic states with speeding cameras and the lowest median of collisions due to speeding can be seen in republican states with speeding cameras. These results support the idea that speeding cameras make drivers more aware of their driving habits to reduce thier speed. The mean and median number of officers is highest in states with limited presence of speed cameras such as in school zones, or construction areas where police are usually stationed to monitor drivers. The median for percent of collisions from speeding and number of drivers involved in a collisions is highest in republican states. The standard of deviation for percent of collisions due to speeding is highest in states with no speeding cameras which can be due too the fact that people are less likley to monitor thier speed if they know they are not being monitored by law enforcement. The standard of deviation for number of drivers involved in a collision is lowest in republican states with speed cameras. Last, the standard of deviation for active officers varies greatly and this could be due to the size and population of the state varying as well.</p>
+</div>
+<div id="visualizing" class="section level2">
+<h2>Visualizing</h2>
+<pre class="r"><code>traffic %&gt;% select_if(is.numeric) %&gt;% cor %&gt;% as.data.frame %&gt;% 
+    rownames_to_column %&gt;% pivot_longer(-1) %&gt;% ggplot(aes(rowname, 
+    name, fill = value)) + geom_tile() + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + geom_text(aes(label = round(value, 2))) + xlab(&quot;&quot;) + 
+    ylab(&quot;&quot;) + scale_fill_gradient2(low = &quot;red&quot;, high = &quot;blue&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(data = traffic, aes(x = speedcamera, fill = party)) + 
+    geom_bar(aes(y = perc_speeding), stat = &quot;summary&quot;, fun.y = &quot;mean&quot;, 
+        position = &quot;dodge&quot;) + scale_y_continuous(name = &quot;Percent Drivers Speeding&quot;, 
+    breaks = seq(0, 50, by = 5)) + ggtitle(&quot;Speeding Accident Data&quot;) + 
+    xlab(&quot;Speeding Camera&quot;) + theme(axis.text = element_text(colour = &quot;darkblue&quot;)) + 
+    scale_fill_brewer(palette = &quot;Pastel1&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(traffic, aes(redcamera, officers, fill = party)) + geom_boxplot() + 
+    scale_y_continuous(name = &quot;Number of Officers&quot;, breaks = seq(0, 
+        80000, by = 10000)) + labs(title = &quot;Active Officer Data&quot;, 
+    x = &quot;Red Light Camera&quot;) + facet_wrap(~party) + theme(panel.border = element_rect(linetype = &quot;dashed&quot;, 
+    fill = NA)) + scale_fill_brewer(palette = &quot;Set1&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" />
+<strong>Correlation Heatmap</strong>
+The heatmap shows the highest correlation between between the number of registered drivers in a state and the number of active duty officers in the state. This seems to make sense because states with more people generally will have a higher number of officers to efficiently respond to situations. States with high populations such as New York and California will typically have more precints and more officers compared to low population states such as Vermont. Another high correlation that can be seen in between insurance premium cost and the losses incurred by insurance companies. This makes sense because an accident will cause a driver’s insurance premium to go up, therefore, the more losses a company has, the more they raise thier prices. A generally moderate correlation can be seen between the number of officers in a state and the losses incurred by insurance companies. This could be because a higher number of losses means that state sees more accidents, therefore, they need a larger number of officers to be able to efficiently respond to accidents.</p>
+<p><strong>Barplot</strong>
+This chart shows the relationship between the presence of speeding cameras in a state and the percent of collisions in the state due to speeding and is separated by that state’s political party. It can be seen that there was not a significant difference in the number of collisions due to speeding based on the presence of speeding cameras. Based on political party, there were less collisions seen for the democratic party but these differences were not significant. The lack of significant differences could be due to the fact that in collisions where speeding was the main factor, the regard for speeding cameras is not on the drivers mind. Therefore, as speeding is a leading cause of traffic collisions, it is similar across states. If the data explained the number of tickets given due to speeding, perhaps there would be a difference based on the presence of speeding cameras. States with speeding cameras everywhere, or in limited areas would probably have a lower number of tickets compared to the states with no speeding cameras present.</p>
+<p><strong>Boxplot</strong>
+This plot shows the relationship between the presence of red light cameras in a state and the number of active duty officers in the state and is separated by political party. In democratic states, it can be seen that the distribution of officers in states with red light cameras or no red light cameras is about equally lower with two outliers. The states with limited red light cameras could have more police officers because in limited areas such as school zones or construction sites, states will typically post officers to monitor the areas. The outliers could be a result of larger states with a larger population. The plots with and limited red light cameras are negatively skewed while the states with no cameras have a pretty normal distribution. In the boxplots for republican states, there is a negative skew for states with and without red light cameras and a positive skew for states with limited red light cameras. Once again, the outliers occur in states with and without red light cameras which could be due to the population of that particular state being larger. The distributions of officers in the republican data are about equal to each other. This could be because republicans favor policies that give tax breaks meaning less funding to areas such as police programs.</p>
+</div>
+<div id="dimensionality-reduction" class="section level2">
+<h2>Dimensionality Reduction</h2>
+<pre class="r"><code>library(cluster)
+pam_dat &lt;- traffic %&gt;% select(-state)
+sil_width &lt;- vector()
+for (i in 2:10) {
+    pam_fit &lt;- pam(pam_dat, k = i)
+    sil_width[i] &lt;- pam_fit$silinfo$avg.width
+}
+ggplot() + geom_line(aes(x = 1:10, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:10)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pam1 &lt;- traffic %&gt;% select(-1) %&gt;% pam(3)
+pam1</code></pre>
+<pre><code>## Medoids:
+##      ID num_drivers perc_speeding perc_alcohol perc_not_distracted
+## [1,] 43        19.5            21           29                  82
+## [2,] 13        15.3            36           29                  85
+## [3,] 44        19.4            40           38                  91
+##      perc_no_previous insurance_premiums losses redcamera speedcamera officers
+## [1,]               81             767.91 155.57         3           3    16095
+## [2,]               98             641.96  82.75         2           2     2759
+## [3,]               87            1004.75 156.83         2           2    55386
+##      party  drivers driver_officer
+## [1,]     2  4605100       286.1199
+## [2,]     2  1111485       402.8579
+## [3,]     2 15447273       278.9021
+## Clustering vector:
+##  [1] 1 2 1 2 3 1 2 2 2 3 1 2 2 1 1 2 2 1 1 2 1 1 1 1 2 1 2 2 2 2 1 2 3 1 2 1 2 2
+## [39] 1 2 1 2 1 3 2 2 1 1 2 1 2
+## Objective function:
+##   build    swap 
+## 1338621 1170211 
+## 
+## Available components:
+##  [1] &quot;medoids&quot;    &quot;id.med&quot;     &quot;clustering&quot; &quot;objective&quot;  &quot;isolation&quot; 
+##  [6] &quot;clusinfo&quot;   &quot;silinfo&quot;    &quot;diss&quot;       &quot;call&quot;       &quot;data&quot;</code></pre>
+<pre class="r"><code>pamclust &lt;- traffic %&gt;% mutate(cluster = as.factor(pam1$clustering))
+pamclust %&gt;% ggplot(aes(log(officers), log(drivers), color = cluster)) + 
+    geom_point()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pamclust %&gt;% group_by(cluster) %&gt;% summarize_if(is.numeric, mean, 
+    na.rm = T)</code></pre>
+<pre><code>## # A tibble: 3 x 11
+##   cluster num_drivers perc_speeding perc_alcohol perc_not_distra…
+##   &lt;fct&gt;         &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt;            &lt;dbl&gt;
+## 1 1              15.3          31.0         30.7             85.8
+## 2 2              16.3          32.4         30.6             85.3
+## 3 3              15.4          32           31               90.5
+## # … with 6 more variables: perc_no_previous &lt;dbl&gt;, insurance_premiums &lt;dbl&gt;,
+## #   losses &lt;dbl&gt;, officers &lt;dbl&gt;, drivers &lt;dbl&gt;, driver_officer &lt;dbl&gt;</code></pre>
+<pre class="r"><code>traffic[pam1$id.med, ]</code></pre>
+<pre><code>## # A tibble: 3 x 14
+##   state num_drivers perc_speeding perc_alcohol perc_not_distra… perc_no_previous
+##   &lt;chr&gt;       &lt;dbl&gt;         &lt;int&gt;        &lt;int&gt;            &lt;int&gt;            &lt;int&gt;
+## 1 Tenn…        19.5            21           29               82               81
+## 2 Idaho        15.3            36           29               85               98
+## 3 Texas        19.4            40           38               91               87
+## # … with 8 more variables: insurance_premiums &lt;dbl&gt;, losses &lt;dbl&gt;,
+## #   redcamera &lt;fct&gt;, speedcamera &lt;fct&gt;, officers &lt;int&gt;, party &lt;fct&gt;,
+## #   drivers &lt;int&gt;, driver_officer &lt;dbl&gt;</code></pre>
+<pre class="r"><code>library(GGally)
+ggpairs(pamclust, columns = c(2, 3, 7, 8, 11, 13), aes(color = cluster))</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" />
+The optimal number of clusters used was 3 based on the analysis of silhouette width. From the cluster analysis, the mean number of drivers involved in collisions for all three clusters was between 15-16. The mean percent of drivers involved in collisions due to speeding for the three clusters was around 32%. The visual showed that there was a strong relationship between the number of active duty officers and the number of registered drivers in a state. The most representative states for the clusters were Tennessee, Idaho, and Texas. In looking at pairwise combinations, the strongest correlations can be seen between losses and insurance premiums and number of registered drivers and officers. They show significant separation in their plots, have distinct clusters and show a strong correlation.</p>
+<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
