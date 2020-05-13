@@ -21,5 +21,14 @@
 I decided to analyze traffic data for my projects because driving is something most of us can relate to. Driving is a daily activity that most of us do not think about when we are doing it but there are many things that can subconsciously contribute to how we drive. I chose to analyze data regarding the presence of traffic cameras, as well as laws we are aware of to see if it had any effect on how safe people drive.</description>
     </item>
     
+    <item>
+      <title>Python</title>
+      <link>/blog/python/</link>
+      <pubDate>Wed, 13 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/python/</guid>
+      <description></description>
+    </item>
+    
   </channel>
 </rss>

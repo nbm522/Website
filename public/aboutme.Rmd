@@ -1,0 +1,12 @@
+---
+title: "about"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Biography
+
+Hello! I am from Houston, Texas and currently attend The University of Texas at Austin. I major in Biology and plan on attending medical school after finishing my degree. I volunteer at Dell Seaton Medical Center and enjoy learning from medical professionals as well as patients. I hope to one day be able to care for others as a doctor and continue learning from the people I meet. 
