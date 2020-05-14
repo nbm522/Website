@@ -1,9 +1,0 @@
----
-title: Python
-author: ''
-date: '2020-05-13'
-slug: python
-categories: []
-tags: []
-description: ''
----

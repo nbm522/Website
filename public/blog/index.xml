@@ -6,28 +6,30 @@
     <description>Recent content in Blogs on Portfolio</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Wed, 13 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 14 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Neha</title>
+      <title>Python and R</title>
+      <link>/blog/python-and-r/</link>
+      <pubDate>Thu, 14 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/python-and-r/</guid>
+      <description>The reticulate package let’s R and python work together! Simply define something in the R code chunk
+library(reticulate) so&amp;lt;- &amp;quot;Stay Healthy&amp;quot; then define something in the python code chunk. After you print out the result you can show your message!
+cool=&amp;quot;Everyone&amp;quot; print(r.so,cool)  These are hard times for many people so here are some memes to brighten your day!</description>
+    </item>
+    
+    <item>
+      <title>Neha&#39;s Project Topics</title>
       <link>/blog/neha/</link>
       <pubDate>Wed, 13 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/blog/neha/</guid>
       <description>Project Topics
 I decided to analyze traffic data for my projects because driving is something most of us can relate to. Driving is a daily activity that most of us do not think about when we are doing it but there are many things that can subconsciously contribute to how we drive. I chose to analyze data regarding the presence of traffic cameras, as well as laws we are aware of to see if it had any effect on how safe people drive.</description>
-    </item>
-    
-    <item>
-      <title>Python</title>
-      <link>/blog/python/</link>
-      <pubDate>Wed, 13 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/python/</guid>
-      <description></description>
     </item>
     
   </channel>

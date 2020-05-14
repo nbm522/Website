@@ -56,12 +56,12 @@
       <div class="container">
         <div class="blog-post">
           <h3>
-            <strong><a href="/blog/python/">Python and R</a></strong>
+            <strong><a href="/blog/python-and-r/">Python and R</a></strong>
           </h3>
         </div>
         <div class="blog-title">
           <h4>
-          May 13, 2020
+          May 14, 2020
             &nbsp;&nbsp;
             
           </h4>
@@ -72,9 +72,16 @@
               
 
 
+<p>The reticulate package let’s R and python work together!
+Simply define something in the R code chunk</p>
 <pre class="r"><code>library(reticulate)
-use_python(&quot;/usr/bin/python3&quot;)
 so&lt;- &quot;Stay Healthy&quot;</code></pre>
+<p>then define something in the python code chunk. After you print out the result you can show your message!</p>
+<pre class="python"><code>cool=&quot;Everyone&quot;
+print(r.so,cool) </code></pre>
+<p>These are hard times for many people so here are some memes to brighten your day!</p>
+<p><img src="/blog/2020-05-14-python-and-r_files/meme.png" /><br />
+<img src="/blog/2020-05-14-python-and-r_files/meme2.png" /></p>
 
               <hr>
               <div class="related-posts">
