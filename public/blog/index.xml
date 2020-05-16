@@ -17,9 +17,9 @@
       <pubDate>Thu, 14 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/blog/python-and-r/</guid>
-      <description>The reticulate package let’s R and python work together! Simply define something in the R code chunk
-library(reticulate) so&amp;lt;- &amp;quot;Stay Healthy&amp;quot; then define something in the python code chunk. After you print out the result you can show your message!
-cool=&amp;quot;Everyone&amp;quot; print(r.so,cool)  These are hard times for many people so here are some memes to brighten your day!</description>
+      <description>library(reticulate) Sys.setenv(RETICULATE_PYTHON=&amp;quot;/usr/bin/python&amp;quot;) use_python(&amp;quot;/usr/bin/python&amp;quot;) The reticulate package let’s R and python work together! Simply define something in the R code chunk
+so&amp;lt;- &amp;quot;Stay Healthy&amp;quot; then define something in the python code chunk. After you print out the result you can show your message!
+cool=&amp;quot;Everyone&amp;quot; print(r.so,cool)  ## (&amp;#39;Stay Healthy&amp;#39;, &amp;#39;Everyone&amp;#39;) These are hard times for many people so here are some memes to brighten your day!</description>
     </item>
     
     <item>

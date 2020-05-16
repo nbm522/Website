@@ -7,18 +7,23 @@ categories: []
 tags: []
 description: ''
 ---
+```{r}
+library(reticulate)
+Sys.setenv(RETICULATE_PYTHON="/usr/bin/python")
+use_python("/usr/bin/python")
+```
+
 
 The reticulate package let's R and python work together!
 Simply define something in the R code chunk
 
 ```{r}
-library(reticulate)
 so<- "Stay Healthy"
 ```
 
 then define something in the python code chunk. After you print out the result you can show your message!
 
-```{python eval=F} 
+```{python} 
 cool="Everyone"
 print(r.so,cool) 
 ```

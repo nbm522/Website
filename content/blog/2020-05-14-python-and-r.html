@@ -10,13 +10,16 @@ description: ''
 
 
 
+<pre class="r"><code>library(reticulate)
+Sys.setenv(RETICULATE_PYTHON=&quot;/usr/bin/python&quot;)
+use_python(&quot;/usr/bin/python&quot;)</code></pre>
 <p>The reticulate package let’s R and python work together!
 Simply define something in the R code chunk</p>
-<pre class="r"><code>library(reticulate)
-so&lt;- &quot;Stay Healthy&quot;</code></pre>
+<pre class="r"><code>so&lt;- &quot;Stay Healthy&quot;</code></pre>
 <p>then define something in the python code chunk. After you print out the result you can show your message!</p>
 <pre class="python"><code>cool=&quot;Everyone&quot;
 print(r.so,cool) </code></pre>
+<pre><code>## (&#39;Stay Healthy&#39;, &#39;Everyone&#39;)</code></pre>
 <p>These are hard times for many people so here are some memes to brighten your day!</p>
 <p><img src="/blog/2020-05-14-python-and-r_files/meme.png" /><br />
 <img src="/blog/2020-05-14-python-and-r_files/meme2.png" /></p>
